@@ -67,9 +67,10 @@ Used **IPWRA** to control for confounding variables and estimate the causal impa
 ![ ](https://github.com/MownikaKonamaneni/Econometrics/blob/main/Images/DAG_Outcome_model.jpg)
 
 * Visualizations such as propensity score histograms and covariate overlap scatterplots validated balance and comparability between treated and control groups.
-![ ](https://github.com/MownikaKonamaneni/Econometrics/blob/main/Images/Images/Propensity_Scores.png)
 
-![ ](https://github.com/MownikaKonamaneni/Econometrics/blob/main/Images/Images/Overlap_between_covariates.jpg)
+![ ](https://github.com/MownikaKonamaneni/Econometrics/blob/main/Images/Propensity_Scores.png)
+
+![ ](https://github.com/MownikaKonamaneni/Econometrics/blob/main/Images/Overlap_between_covariates.jpg)
 
 ---
 ## 📊 Main Results
