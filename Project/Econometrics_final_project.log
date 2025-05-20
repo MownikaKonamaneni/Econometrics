@@ -1,0 +1,769 @@
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  D:\Masters\Sem4\Econometrics\Project\Econometrics_final_project.log
+  log type:  text
+ opened on:  10 Dec 2023, 14:11:58
+
+. 
+. *set working directory
+. cd "D:\Masters\Sem4\Econometrics\Project"
+D:\Masters\Sem4\Econometrics\Project
+
+. 
+. import delimited "D:\Masters\Sem4\Econometrics\Project\data\Final_data.csv" // import the data
+(encoding automatically selected: ISO-8859-1)
+(33 vars, 51 obs)
+
+. 
+. *Data Exploration
+. * Generate the "treat" variable
+. gen treat = .
+(51 missing values generated)
+
+. 
+. * Set "treat" to 0 for states with MML before 2016
+. replace treat = 0 if firstyearmml < 2016
+(24 real changes made)
+
+. * Set "treat" to 1 for states with MML is missing 
+. replace treat = 1 if missing(firstyearmml) & treat != 0
+(19 real changes made)
+
+. 
+. * Drop states where "treat" is missing
+. drop if missing(treat)
+(8 observations deleted)
+
+. 
+. *Converting string variable into numerical variable
+. gen crime_2014_no_commas = subinstr(violent_crimepc_2014, ",", "", .)
+
+. gen crime_2014 = real(crime_2014_no_commas)
+
+. gen crime_2019_no_commas = subinstr(violent_crimespc_2019, ",", "", .)
+
+. gen crime_2019 = real(crime_2019_no_commas)
+
+. gen income_2019_no_commas = subinstr(income_2019, ",", "", .)
+
+. gen income_2019_n = real(income_2019_no_commas)
+
+. drop income_2019_no_commas income_2019
+
+. 
+. 
+. *Summary statistics for all the variables in treatment model 
+. summarize male_2014 young_2014p middle_aged_2014p        ///
+> unemployment_2014 conservative catholic liberal catholic ///    
+> evangelicalprotestant historicallyblackprotestant jewish ///    
+> mainlineprotestant      unaffiliated relig_att_week     relig_att_year
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+   male_2014 |         43    .4937225    .0084318   .4748901   .5236804
+ young_2014p |         43      .24824    .0201119   .2122993   .3571403
+middle~2014p |         43    .3894358    .0146753   .3595499   .4255393
+unemplo~2014 |         43    6.246512    1.376218        3.5        9.2
+conservative |         43    .3894358    .0146753   .3595499   .4255393
+-------------+---------------------------------------------------------
+    catholic |         43    .1944186    .0869675        .04        .42
+     liberal |         43    .3799701    .0118549     .35867   .4075035
+    catholic |         43    .1944186    .0869675        .04        .42
+evangelica~t |         43    .2555814    .1113618        .08        .52
+historical~t |         43    .0588372    .0604432        .01        .24
+-------------+---------------------------------------------------------
+      jewish |         43    .0172093    .0136845        .01        .07
+mainlinepr~t |         43    .1606977    .0532467         .1        .32
+unaffiliated |         43    .2374419    .0577801        .12        .37
+relig_att_~k |         43    .3462791    .0735178        .21        .51
+relig_att_~r |         43    .3286047    .0322624        .24        .41
+
+. 
+. * Scaling variable (min-max) 
+. gen unemployment_2014_s = (unemployment_2014 - 3.5) / (9.2 - 3.5)
+
+. sum unemployment_2014_s
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+unemployme~s |         43    .4818441    .2414417          0   .9999999
+
+. 
+. *Summary statistics for all the variables in outcome model 
+. summarize crime_2019 povertyp_2019 edu_att_2019 income_2019_n ///
+> male_2019 unemployment_2019 relig_att_week relig_att_year ///
+> young_2019p crime_2014  
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+  crime_2019 |         43       380.8    186.7833      115.2       1049
+poverty~2019 |         43    10.55116     2.72566        4.9       19.4
+edu_att_2019 |         43     .884186      .02381       .842        .96
+income_201~n |         43    68139.53    11361.57      48200      91900
+   male_2019 |         43    .4938566    .0084034   .4742635   .5213869
+-------------+---------------------------------------------------------
+unemplo~2019 |         43    3.562791    .8023843        2.1        5.6
+relig_att_~k |         43    .3462791    .0735178        .21        .51
+relig_att_~r |         43    .3286047    .0322624        .24        .41
+ young_2019p |         43    .2440332    .0184983   .2119621   .3433629
+  crime_2014 |         43    364.3651    188.4314       99.3     1244.4
+
+. 
+. * Scaling variables (min-max)
+. gen crime_2019_s = (crime_2019 - 115.2) / (1049 - 115.2)
+
+. gen povertyp_2019_s = (povertyp_2019 - 4.9) / (19.4 - 4.9)
+
+. gen income_2019_s = (income_2019_n - 48200) / (91900 - 48200)
+
+. gen unemployment_2019_s = (unemployment_2019 - 2.1) / (5.6 - 2.1)
+
+. gen crime_2014_s = (crime_2014 - 99.3) / (1244.4 - 99.3)
+
+. sum crime_2019_s povertyp_2019_s income_2019_s unemployment_2019_s crime_2014_s
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+crime_2019_s |         43    .2844292     .200025  -3.27e-09          1
+povertyp_2~s |         43    .3897354    .1879766   6.58e-09          1
+income_201~s |         43    .4562823    .2599902          0          1
+unemploy~9_s |         43    .4179402    .2292527  -2.72e-08          1
+crime_2014_s |         43    .2314777    .1645545   2.67e-09          1
+
+. 
+. *Exploring the each independent variable relation with treat
+. graph box male_2014, over(treat)
+
+. graph box young_2014p, over(treat)
+
+. graph box middle_aged_2014p, over(treat)
+
+. graph box unemployment_2014_s, over(treat)
+
+. graph box conservative, over(treat)
+
+. graph box catholic, over(treat)
+
+. 
+. //-----------------------------------------------------------------------------
+. 
+. *Logistic Regression Models
+. *Treatment selection model 1
+. logit treat male_2014 young_2014p middle_aged_2014p      ///
+> unemployment_2014_s conservative catholic liberal ///   
+> evangelicalprotestant historicallyblackprotestant jewish ///    
+> mainlineprotestant      unaffiliated relig_att_week     relig_att_year
+
+note: jewish != .01 predicts failure perfectly;
+      jewish omitted and 15 obs not used.
+
+note: conservative omitted because of collinearity.
+Iteration 0:  Log likelihood = -17.582364  
+Iteration 1:  Log likelihood = -2.7749057  
+Iteration 2:  Log likelihood = -.27614191  
+Iteration 3:  Log likelihood =          0  
+Iteration 4:  Log likelihood =          0  
+
+Logistic regression                                     Number of obs =     28
+                                                        LR chi2(-1)   =  35.16
+                                                        Prob > chi2   =      .
+Log likelihood = 0                                      Pseudo R2     = 1.0000
+
+---------------------------------------------------------------------------------------------
+                      treat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+----------------------------+----------------------------------------------------------------
+                  male_2014 |   5196.888          .        .       .            .           .
+                young_2014p |  -10566.11          .        .       .            .           .
+          middle_aged_2014p |  -21238.26          .        .       .            .           .
+        unemployment_2014_s |  -110.8234          .        .       .            .           .
+               conservative |          0  (omitted)
+                   catholic |   866.2159          .        .       .            .           .
+                    liberal |   21252.76          .        .       .            .           .
+      evangelicalprotestant |   746.4045          .        .       .            .           .
+historicallyblackprotestant |   783.2877          .        .       .            .           .
+                     jewish |          0  (omitted)
+         mainlineprotestant |   270.1072          .        .       .            .           .
+               unaffiliated |   2154.084          .        .       .            .           .
+             relig_att_week |   1999.557          .        .       .            .           .
+             relig_att_year |   1295.605          .        .       .            .           .
+                      _cons |  -1831.219          .        .       .            .           .
+---------------------------------------------------------------------------------------------
+Note: 9 failures and 19 successes completely determined.
+
+. estimates store model1
+
+. 
+. *Propensity scores
+. predict ps1, p
+(15 missing values generated)
+
+. 
+. *tabulating jewish to see variation in observations
+. tab jewish
+
+     Jewish |      Freq.     Percent        Cum.
+------------+-----------------------------------
+        .01 |         28       65.12       65.12
+        .02 |          8       18.60       83.72
+        .03 |          4        9.30       93.02
+        .05 |          1        2.33       95.35
+        .06 |          1        2.33       97.67
+        .07 |          1        2.33      100.00
+------------+-----------------------------------
+      Total |         43      100.00
+
+. 
+. *Correlation among treatment model variables
+. corr male_2014 young_2014p middle_aged_2014p     ///
+> unemployment_2014_s conservative catholic liberal ///   
+> evangelicalprotestant historicallyblackprotestant jewish ///    
+> mainlineprotestant      unaffiliated relig_att_week     relig_att_year
+(obs=43)
+
+             | mal~2014 yo~2014p mi~2014p unem~4_s conser~e catholic  liberal evange~t histor~t   jewish mainli~t unaffi~d relig_~k relig_~r
+-------------+------------------------------------------------------------------------------------------------------------------------------
+   male_2014 |   1.0000
+ young_2014p |  -0.0900   1.0000
+middle~2014p |  -0.2032  -0.5340   1.0000
+unemploy~4_s |  -0.3677   0.1629   0.1403   1.0000
+conservative |  -0.2032  -0.5340   1.0000   0.1403   1.0000
+    catholic |  -0.0745   0.0163   0.2250   0.2101   0.2250   1.0000
+     liberal |  -0.2797  -0.4573   0.9673   0.2558   0.9673   0.2424   1.0000
+evangelica~t |   0.0475  -0.1600  -0.2888  -0.0227  -0.2888  -0.7623  -0.2906   1.0000
+historical~t |  -0.6143   0.3631  -0.0870   0.2915  -0.0870  -0.4298   0.0255   0.2627   1.0000
+      jewish |  -0.4433   0.2444   0.2101   0.2422   0.2101   0.4487   0.2926  -0.5817   0.1601   1.0000
+mainlinepr~t |   0.1324  -0.2923  -0.0779  -0.6272  -0.0779  -0.0243  -0.1755  -0.0424  -0.2313  -0.2717   1.0000
+unaffiliated |   0.3336  -0.0061   0.3712  -0.0685   0.3712   0.2766   0.2775  -0.5927  -0.5026   0.1714  -0.1828   1.0000
+relig_att_~k |  -0.1564  -0.0192  -0.4099   0.0427  -0.4099  -0.5545  -0.3451   0.8047   0.4737  -0.3703   0.0116  -0.8615   1.0000
+relig_att_~r |   0.0226   0.0408  -0.0370  -0.0092  -0.0370   0.1923   0.0213  -0.1807   0.1054   0.2013   0.1420  -0.1207  -0.1980   1.0000
+
+
+. 
+. 
+. *roc
+. roctab treat ps1
+
+                      ROC                     Asymptotic normal  
+           Obs       area     Std. err.      [95% conf. interval]
+     ------------------------------------------------------------
+            28     1.0000       0.0000        1.00000     1.00000
+
+. estat classification
+
+Logistic model for treat
+
+              -------- True --------
+Classified |         D            ~D  |      Total
+-----------+--------------------------+-----------
+     +     |        19             0  |         19
+     -     |         0             9  |          9
+-----------+--------------------------+-----------
+   Total   |        19             9  |         28
+
+Classified + if predicted Pr(D) >= .5
+True D defined as treat != 0
+--------------------------------------------------
+Sensitivity                     Pr( +| D)  100.00%
+Specificity                     Pr( -|~D)  100.00%
+Positive predictive value       Pr( D| +)  100.00%
+Negative predictive value       Pr(~D| -)  100.00%
+--------------------------------------------------
+False + rate for true ~D        Pr( +|~D)    0.00%
+False - rate for true D         Pr( -| D)    0.00%
+False + rate for classified +   Pr(~D| +)    0.00%
+False - rate for classified -   Pr( D| -)    0.00%
+--------------------------------------------------
+Correctly classified                       100.00%
+--------------------------------------------------
+
+. * Generate a variable indicating the predicted treatment status based on a threshold
+. gen treat_predicted1 = (ps1 > 0.5)
+
+. * Cross-tabulate observed and predicted treatment status
+. tab treat treat_predicted1, matcell(CM1)
+
+           |   treat_predicted1
+     treat |         0          1 |     Total
+-----------+----------------------+----------
+         0 |         9         15 |        24 
+         1 |         0         19 |        19 
+-----------+----------------------+----------
+     Total |         9         34 |        43 
+
+. matrix list CM1
+
+CM1[2,2]
+    c1  c2
+r1   9  15
+r2   0  19
+
+. * Calculate type 1 error rate (false positive rate)
+. gen type1_err_m1 = treat_predicted1 & (treat == 0)
+
+. * Calculate type 2 error rate (false negative rate)
+. gen type2_err_m1 = !treat_predicted1 & (treat == 1)
+
+. sum type1_err_m1 type2_err_m1
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+type1_err_m1 |         43    .3488372    .4822428          0          1
+type2_err_m1 |         43           0           0          0          0
+
+. // -------------------------------------------------------------------------------
+. 
+. *removing variables based on model1 output and correlation 
+. *Treatment selection model2
+. logit treat male_2014 young_2014p unemployment_2014_s ///
+> catholic evangelicalprotestant historicallyblackprotestant ///  
+> mainlineprotestant unaffiliated relig_att_year
+
+Iteration 0:  Log likelihood = -29.513972  
+Iteration 1:  Log likelihood = -8.6834114  
+Iteration 2:  Log likelihood = -7.6118725  
+Iteration 3:  Log likelihood = -6.8411937  
+Iteration 4:  Log likelihood = -6.8086234  
+Iteration 5:  Log likelihood = -6.8081612  
+Iteration 6:  Log likelihood = -6.8081606  
+
+Logistic regression                                     Number of obs =     43
+                                                        LR chi2(9)    =  45.41
+                                                        Prob > chi2   = 0.0000
+Log likelihood = -6.8081606                             Pseudo R2     = 0.7693
+
+---------------------------------------------------------------------------------------------
+                      treat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+----------------------------+----------------------------------------------------------------
+                  male_2014 |   120.5773   277.5798     0.43   0.664    -423.4692    664.6238
+                young_2014p |  -147.4405   181.3358    -0.81   0.416    -502.8521    207.9711
+        unemployment_2014_s |  -3.034611   5.888808    -0.52   0.606    -14.57646    8.507241
+                   catholic |  -27.01224   26.37493    -1.02   0.306    -78.70616    24.68168
+      evangelicalprotestant |   38.03175   22.62283     1.68   0.093    -6.308193    82.37168
+historicallyblackprotestant |  -5.018355   40.42856    -0.12   0.901    -84.25689    74.22018
+         mainlineprotestant |  -8.079001   22.67091    -0.36   0.722    -52.51316    36.35516
+               unaffiliated |  -73.15237   54.06383    -1.35   0.176    -179.1155    32.81078
+             relig_att_year |   3.630141   27.95332     0.13   0.897    -51.15735    58.41764
+                      _cons |  -8.993147   146.2706    -0.06   0.951    -295.6782    277.6919
+---------------------------------------------------------------------------------------------
+Note: 2 failures and 2 successes completely determined.
+
+. estimates store model2
+
+. *Propensity scores
+. predict ps2, p
+
+. 
+. *Correlation matrix for model2 variables
+. corr male_2014 young_2014p unemployment_2014_s ///
+> catholic evangelicalprotestant historicallyblackprotestant ///  
+> mainlineprotestant unaffiliated relig_att_year
+(obs=43)
+
+             | mal~2014 yo~2014p unem~4_s catholic evange~t histor~t mainli~t unaffi~d relig_~r
+-------------+---------------------------------------------------------------------------------
+   male_2014 |   1.0000
+ young_2014p |  -0.0900   1.0000
+unemploy~4_s |  -0.3677   0.1629   1.0000
+    catholic |  -0.0745   0.0163   0.2101   1.0000
+evangelica~t |   0.0475  -0.1600  -0.0227  -0.7623   1.0000
+historical~t |  -0.6143   0.3631   0.2915  -0.4298   0.2627   1.0000
+mainlinepr~t |   0.1324  -0.2923  -0.6272  -0.0243  -0.0424  -0.2313   1.0000
+unaffiliated |   0.3336  -0.0061  -0.0685   0.2766  -0.5927  -0.5026  -0.1828   1.0000
+relig_att_~r |   0.0226   0.0408  -0.0092   0.1923  -0.1807   0.1054   0.1420  -0.1207   1.0000
+
+
+. 
+. *roc
+. roctab treat ps2
+
+                      ROC                     Asymptotic normal  
+           Obs       area     Std. err.      [95% conf. interval]
+     ------------------------------------------------------------
+            43     0.9868       0.0124        0.96244     1.00000
+
+. 
+. * Generate a variable indicating the predicted treatment status based on a threshold
+. gen treat_predicted2 = (ps2 > 0.5)
+
+. * Cross-tabulate observed and predicted treatment status
+. tab treat treat_predicted2, matcell(CM2)
+
+           |   treat_predicted2
+     treat |         0          1 |     Total
+-----------+----------------------+----------
+         0 |        24          0 |        24 
+         1 |         2         17 |        19 
+-----------+----------------------+----------
+     Total |        26         17 |        43 
+
+. matrix list CM2
+
+CM2[2,2]
+    c1  c2
+r1  24   0
+r2   2  17
+
+. * Calculate type 1 error rate (false positive rate)
+. gen type1_err_m2 = treat_predicted2 & (treat == 0)
+
+. * Calculate type 2 error rate (false negative rate)
+. gen type2_err_m2 = !treat_predicted2 & (treat == 1)
+
+. sum type1_err_m2 type2_err_m2
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+type1_err_m2 |         43           0           0          0          0
+type2_err_m2 |         43    .0465116    .2130826          0          1
+
+. 
+. // ---------------------------------------------------------------------------
+. 
+. *Treatment selection model3
+. logit treat male_2014 young_2014p unemployment_2014_s catholic ///
+> unaffiliated 
+
+Iteration 0:  Log likelihood = -29.513972  
+Iteration 1:  Log likelihood =  -11.04314  
+Iteration 2:  Log likelihood = -9.8806921  
+Iteration 3:  Log likelihood = -9.6850573  
+Iteration 4:  Log likelihood = -9.6839693  
+Iteration 5:  Log likelihood = -9.6839691  
+
+Logistic regression                                     Number of obs =     43
+                                                        LR chi2(5)    =  39.66
+                                                        Prob > chi2   = 0.0000
+Log likelihood = -9.6839691                             Pseudo R2     = 0.6719
+
+-------------------------------------------------------------------------------------
+              treat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+--------------------+----------------------------------------------------------------
+          male_2014 |   145.6758   127.4929     1.14   0.253    -104.2056    395.5573
+        young_2014p |  -62.20073   81.60458    -0.76   0.446    -222.1428     97.7413
+unemployment_2014_s |  -1.407646   3.285937    -0.43   0.668    -7.847963    5.032672
+           catholic |  -29.55417   12.63997    -2.34   0.019    -54.32806   -4.780281
+       unaffiliated |   -57.8759   23.37021    -2.48   0.013    -103.6807   -12.07113
+              _cons |  -37.21666   47.37682    -0.79   0.432    -130.0735     55.6402
+-------------------------------------------------------------------------------------
+
+. estimates store model3
+
+. *Propensity scores
+. predict ps3, p
+
+. 
+. * Generate a variable indicating the predicted treatment status based on a threshold
+. gen treat_predicted3 = (ps3 > 0.5)
+
+. * Cross-tabulate observed and predicted treatment status
+. tab treat treat_predicted3, matcell(CM3)
+
+           |   treat_predicted3
+     treat |         0          1 |     Total
+-----------+----------------------+----------
+         0 |        23          1 |        24 
+         1 |         2         17 |        19 
+-----------+----------------------+----------
+     Total |        25         18 |        43 
+
+. matrix list CM3
+
+CM3[2,2]
+    c1  c2
+r1  23   1
+r2   2  17
+
+. * Calculate type 1 error rate (false positive rate)
+. gen type1_err_m3 = treat_predicted3 & (treat == 0)
+
+. * Calculate type 2 error rate (false negative rate)
+. gen type2_err_m3 = !treat_predicted3 & (treat == 1)
+
+. sum type1_err_m3 type2_err_m3
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+type1_err_m3 |         43    .0232558    .1524986          0          1
+type2_err_m3 |         43    .0465116    .2130826          0          1
+
+. // ---------------------------------------------------------------------------- 
+. *Treatment selection model 4 
+. logit treat male_2014 young_2014p unemployment_2014_s catholic ///
+> evangelicalprotestant
+
+Iteration 0:  Log likelihood = -29.513972  
+Iteration 1:  Log likelihood = -9.8806206  
+Iteration 2:  Log likelihood = -9.2394995  
+Iteration 3:  Log likelihood = -9.1569818  
+Iteration 4:  Log likelihood = -9.1567945  
+Iteration 5:  Log likelihood = -9.1567945  
+
+Logistic regression                                     Number of obs =     43
+                                                        LR chi2(5)    =  40.71
+                                                        Prob > chi2   = 0.0000
+Log likelihood = -9.1567945                             Pseudo R2     = 0.6897
+
+---------------------------------------------------------------------------------------
+                treat | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+            male_2014 |  -116.7122   119.7154    -0.97   0.330    -351.3501    117.9257
+          young_2014p |  -12.32165   88.15417    -0.14   0.889    -185.1006    160.4573
+  unemployment_2014_s |  -9.155148   4.319325    -2.12   0.034    -17.62087   -.6894256
+             catholic |  -5.177936    13.9166    -0.37   0.710    -32.45398    22.09811
+evangelicalprotestant |   36.66235   13.97475     2.62   0.009     9.272338    64.05236
+                _cons |   55.93841   59.31222     0.94   0.346    -60.31141    172.1882
+---------------------------------------------------------------------------------------
+
+. estimates store model4
+
+. predict ps4, p 
+
+. 
+. * Generate a variable indicating the predicted treatment status based on a threshold
+. gen treat_predicted4 = (ps4 > 0.5)
+
+. * Cross-tabulate observed and predicted treatment status
+. tab treat treat_predicted4, matcell(CM4)
+
+           |   treat_predicted4
+     treat |         0          1 |     Total
+-----------+----------------------+----------
+         0 |        22          2 |        24 
+         1 |         2         17 |        19 
+-----------+----------------------+----------
+     Total |        24         19 |        43 
+
+. matrix list CM4
+
+symmetric CM4[2,2]
+    c1  c2
+r1  22
+r2   2  17
+
+. * Calculate type 1 error rate (false positive rate)
+. gen type1_err_m4 = treat_predicted4 & (treat == 0)
+
+. * Calculate type 2 error rate (false negative rate)
+. gen type2_err_m4 = !treat_predicted4 & (treat == 1)
+
+. sum type1_err_m4 type2_err_m4
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+type1_err_m4 |         43    .0465116    .2130826          0          1
+type2_err_m4 |         43    .0465116    .2130826          0          1
+
+. // -----------------------------------------------------------------------------
+. *selecting model3 due to auc
+. roctab treat ps3
+
+                      ROC                     Asymptotic normal  
+           Obs       area     Std. err.      [95% conf. interval]
+     ------------------------------------------------------------
+            43     0.9627       0.0249        0.91387     1.00000
+
+. roctab treat ps4
+
+                      ROC                     Asymptotic normal  
+           Obs       area     Std. err.      [95% conf. interval]
+     ------------------------------------------------------------
+            43     0.9737       0.0204        0.93364     1.00000
+
+. 
+. etable, estimates(model*) cstat(_r_b) cstat(_r_se)cstat(_r_p) ///
+> mstat(r2_p) export(logisticmodel.docx, replace)
+
+---------------------------------------------------------------------
+                                treat     treat     treat     treat  
+---------------------------------------------------------------------
+Male_2014                      5196.888   120.577   145.676  -116.712
+                                (0.000) (277.580) (127.493) (119.715)
+                                             0.66      0.25      0.33
+Young_2014p                   -1.06e+04  -147.441   -62.201   -12.322
+                                (0.000) (181.336)  (81.605)  (88.154)
+                                             0.42      0.45      0.89
+Middle_aged_2014p             -2.12e+04                              
+                                (0.000)                              
+unemployment_2014_s            -110.823    -3.035    -1.408    -9.155
+                                (0.000)   (5.889)   (3.286)   (4.319)
+                                             0.61      0.67      0.03
+Catholic                        866.216   -27.012   -29.554    -5.178
+                                (0.000)  (26.375)  (12.640)  (13.917)
+                                             0.31      0.02      0.71
+Liberal                       21252.758                              
+                                (0.000)                              
+Evangelical Protestant          746.405    38.032              36.662
+                                (0.000)  (22.623)            (13.975)
+                                             0.09                0.01
+Historically Black Protestant   783.288    -5.018                    
+                                (0.000)  (40.429)                    
+                                             0.90                    
+Mainline Protestant             270.107    -8.079                    
+                                (0.000)  (22.671)                    
+                                             0.72                    
+Unaffiliated                   2154.084   -73.152   -57.876          
+                                (0.000)  (54.064)  (23.370)          
+                                             0.18      0.01          
+relig_att_week                 1999.557                              
+                                (0.000)                              
+relig_att_year                 1295.605     3.630                    
+                                (0.000)  (27.953)                    
+                                             0.90                    
+Intercept                     -1831.219    -8.993   -37.217    55.938
+                                (0.000) (146.271)  (47.377)  (59.312)
+                                             0.95      0.43      0.35
+Pseudo R-squared                   1.00      0.77      0.67      0.69
+---------------------------------------------------------------------
+(collection ETable exported to file logisticmodel.docx)
+
+. 
+. *Histogram
+. twoway (histogram ps3 if treat==1, ///
+>         fraction color(gs8) start(0) width(.4)) ///
+>         (histogram ps3 if treat==0, fraction fcolor(none) ///
+>                 lcolor(black) start(0) width(.4)), ///
+>         legend(order(1 "treatment" 2 "control" ))  scheme(s1mono)
+
+.         
+. * Covariate overlap scatter plot
+. twoway (scatter unemployment_2014_s male_2014  if treat==1, ms(th) ) ///
+> (scatter unemployment_2014_s male_2014 if treat==0, ms(oh) ) , ///
+> ytitle("Unemployment rate in 2014") ///
+> xtitle("Percentage of Catholics") ///
+> title("Overlap in Two Dimensions") ///
+> legend(label(1 "Treatment") label(2 "Control")) ///
+> scheme(s1mono) saving(projscatter, replace)
+file projscatter.gph saved
+
+.         
+.         
+. * Covariate overlap scatter plot
+. twoway (scatter catholic young_2014p if treat==1, ms(th) ) ///
+> (scatter catholic young_2014p if treat==0, ms(sh) ) , ///
+> ytitle("Percentage of Catholics") ///
+> xtitle("percentage of young population") ///
+> title("Overlap in Two Dimensions") ///
+> legend(label(1 "Treatment") label(2 "Control")) ///
+> scheme(s1mono) saving(projscatter, replace)
+file projscatter.gph saved
+
+. 
+. 
+. *Inverse Probability weight adjusted regression
+. teffects ipwra (crime_2019_s povertyp_2019_s edu_att_2019 income_2019_s ///
+> male_2019 unemployment_2019_s relig_att_week relig_att_year ///
+> young_2019p crime_2014_s) (treat male_2014 young_2014p unemployment_2014_s ///
+> catholic evangelicalprotestant, logit)
+
+Iteration 0:  EE criterion =  2.239e-23  
+Iteration 1:  EE criterion =  1.046e-31  
+
+Treatment-effects estimation                    Number of obs     =         43
+Estimator      : IPW regression adjustment
+Outcome model  : linear
+Treatment model: logit
+---------------------------------------------------------------------------------------
+                      |               Robust
+         crime_2019_s | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+----------------------+----------------------------------------------------------------
+ATE                   |
+                treat |
+            (1 vs 0)  |  -.1105853   .0288957    -3.83   0.000    -.1672198   -.0539509
+----------------------+----------------------------------------------------------------
+POmean                |
+                treat |
+                   0  |   .3211547   .0388014     8.28   0.000     .2451054    .3972041
+---------------------------------------------------------------------------------------
+
+. 
+. 
+. *Simpler propensity score matching
+. *Inverse probabilit weights
+. gen ipw=1/ps3 if treat==1
+(24 missing values generated)
+
+. replace ipw=1/(1-ps3) if treat==0
+(24 real changes made)
+
+. 
+. *Regression adjusted model for control and treatment groups
+. regress crime_2019_s povertyp_2019_s edu_att_2019 income_2019_s ///
+> male_2019 unemployment_2019_s relig_att_week relig_att_year ///
+> young_2019p crime_2014_s ///
+> if treat==0 [aw=ipw]
+(sum of wgt is 32.33397042751312)
+
+      Source |       SS           df       MS      Number of obs   =        24
+-------------+----------------------------------   F(9, 14)        =     24.63
+       Model |  1.12190724         9   .12465636   Prob > F        =    0.0000
+    Residual |  .070847952        14  .005060568   R-squared       =    0.9406
+-------------+----------------------------------   Adj R-squared   =    0.9024
+       Total |  1.19275519        23  .051858921   Root MSE        =    .07114
+
+-------------------------------------------------------------------------------------
+       crime_2019_s | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------------+----------------------------------------------------------------
+    povertyp_2019_s |   .3938756   .1884834     2.09   0.055    -.0103811    .7981323
+       edu_att_2019 |  -.1191554   1.263101    -0.09   0.926    -2.828239    2.589928
+      income_2019_s |   .1332166   .1315721     1.01   0.328    -.1489776    .4154108
+          male_2019 |   5.690938   2.177184     2.61   0.020     1.021344    10.36053
+unemployment_2019_s |   .0154634   .1552875     0.10   0.922    -.3175952     .348522
+     relig_att_week |   .5382531   .5241451     1.03   0.322    -.5859264    1.662432
+     relig_att_year |  -.8784622   .7609937    -1.15   0.268    -2.510631    .7537068
+        young_2019p |  -.8469072   1.579444    -0.54   0.600    -4.234478    2.540664
+       crime_2014_s |   1.003192   .1815629     5.53   0.000     .6137787    1.392606
+              _cons |  -2.525801   1.707429    -1.48   0.161    -6.187872    1.136269
+-------------------------------------------------------------------------------------
+
+. predict pcontrol
+(option xb assumed; fitted values)
+
+. regress crime_2019_s povertyp_2019_s edu_att_2019 income_2019_s ///
+> male_2019 unemployment_2019_s relig_att_week relig_att_year ///
+> young_2019p crime_2014_s ///
+> if treat==1 [aw=ipw]
+(sum of wgt is 34.62190210819244)
+
+      Source |       SS           df       MS      Number of obs   =        19
+-------------+----------------------------------   F(9, 9)         =     36.98
+       Model |  .173585241         9  .019287249   Prob > F        =    0.0000
+    Residual |  .004694605         9  .000521623   R-squared       =    0.9737
+-------------+----------------------------------   Adj R-squared   =    0.9473
+       Total |  .178279846        18  .009904436   Root MSE        =    .02284
+
+-------------------------------------------------------------------------------------
+       crime_2019_s | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+--------------------+----------------------------------------------------------------
+    povertyp_2019_s |  -.2412215   .1459962    -1.65   0.133    -.5714879    .0890449
+       edu_att_2019 |  -.0339941   .5364872    -0.06   0.951    -1.247612    1.179624
+      income_2019_s |  -.2538557   .1034269    -2.45   0.036    -.4878236   -.0198878
+          male_2019 |   1.691939   1.681574     1.01   0.341    -2.112045    5.495922
+unemployment_2019_s |  -.0208448   .0747226    -0.28   0.787    -.1898791    .1481895
+     relig_att_week |   .8314395   .2865653     2.90   0.018     .1831837    1.479695
+     relig_att_year |   .7720672   .2666942     2.89   0.018      .168763    1.375371
+        young_2019p |   .4657507    1.50691     0.31   0.764    -2.943117    3.874618
+       crime_2014_s |   1.081997   .1206847     8.97   0.000     .8089889    1.355004
+              _cons |  -1.279063   1.201666    -1.06   0.315    -3.997419    1.439294
+-------------------------------------------------------------------------------------
+
+. predict ptreat
+(option xb assumed; fitted values)
+
+. 
+. *Calculate ATU, ATT, ATE
+. gen teffect=ptreat-pcontrol
+
+. tabulate treat, summarize(teffect)
+
+            |         Summary of teffect
+      treat |        Mean   Std. dev.       Freq.
+------------+------------------------------------
+          0 |   -.1302025   .08127583          24
+          1 |  -.08388012   .08785628          19
+------------+------------------------------------
+      Total |  -.10973447   .08641327          43
+
+. 
+end of do-file
+
+. exit, clear
