@@ -62,7 +62,14 @@ Used **IPWRA** to control for confounding variables and estimate the causal impa
 
 * AUC and confusion matrices used to select the optimal treatment model.
 * DAGs (Directed Acyclic Graphs) constructed for both treatment and outcome models to ensure causal assumptions were met.
+![ ](https://github.com/MownikaKonamaneni/Econometrics/blob/main/Images/DAG_Treatment_model.jpg)
+
+![ ](https://github.com/MownikaKonamaneni/Econometrics/blob/main/Images/DAG_Outcome_model.jpg)
+
 * Visualizations such as propensity score histograms and covariate overlap scatterplots validated balance and comparability between treated and control groups.
+![ ](https://github.com/MownikaKonamaneni/Econometrics/blob/main/Images/Images/Propensity_Scores.png)
+
+![ ](https://github.com/MownikaKonamaneni/Econometrics/blob/main/Images/Images/Overlap_between_covariates.jpg)
 
 ---
 ## 📊 Main Results
@@ -95,6 +102,6 @@ cd "path_to_repo"
 2. Run the treatment and outcome models :
 
 ```stata
-do Project/Final_project.do
+do https://github.com/MownikaKonamaneni/Econometrics/blob/main/Project/Final_project.do
 ```
 
