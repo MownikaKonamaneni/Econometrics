@@ -1,4 +1,4 @@
-# Effect of Marijuana Legalization on Violent Crimes
+# Causal effect of Marijuana Legalization on Violent Crimes
 
 ## Overview
 
